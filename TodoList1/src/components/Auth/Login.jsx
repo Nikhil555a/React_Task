@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
+import { db } from "../../firebase/firebaseConfig"; // Firestore import
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
@@ -13,7 +15,15 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // ✅ Firestore me login log add kar do
+      await addDoc(collection(db, "loginLogs"), {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        loginTime: serverTimestamp(),
+      });
+
       nav("/dashboard");
     } catch (error) {
       setErr(error.message);
